@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eagle vs Tactix</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 1400px; padding: 16px; background: #111; color: #eee; }
+  a { color: #8cf; }
+  video, img { width: 100%; background: #000; border-radius: 6px; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  h3 { margin: 16px 0 4px; font-size: 1rem; }
+  button { font: inherit; padding: 6px 14px; }
+</style>
+<h1>Eagle vs Tactix, same clip</h1>
+<p>Compare each minimap against the source video. A missing video means that tool failed: open its log.
+  <button onclick="document.querySelectorAll('video').forEach(v => { v.currentTime = 0; v.play() })">Play all from start</button></p>
+
+<h2>Source clip</h2>
+<video src="clip.mp4" controls muted style="max-width: 700px"></video>
+
+<div class="cols">
+  <section>
+    <h2>Eagle</h2>
+    <h3>Detections on video</h3>
+    <video src="eagle/annotated.mp4" controls muted></video>
+    <h3>Minimap</h3>
+    <video src="eagle/minimap.mp4" controls muted></video>
+    <h3>Voronoi (drawn by this repo from Eagle's coordinates)</h3>
+    <video src="eagle/voronoi.mp4" controls muted></video>
+    <p>Data: <a href="eagle/processed_data.json">processed_data.json</a> ·
+      <a href="eagle/raw_data.json">raw_data.json</a> ·
+      <a href="eagle/metadata.json">metadata.json</a> ·
+      <a href="eagle/log.txt">log</a></p>
+  </section>
+  <section>
+    <h2>Tactix</h2>
+    <h3>Video with minimap and Voronoi overlay</h3>
+    <video src="tactix/result.mp4" controls muted></video>
+    <p>Data: <a href="tactix/match_report.pdf">PDF report</a> ·
+      <a href="tactix/stf/">Tracab files</a> ·
+      <a href="tactix/log.txt">log</a></p>
+  </section>
+</div>
+</html>

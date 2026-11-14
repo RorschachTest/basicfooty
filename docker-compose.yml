@@ -1,0 +1,9 @@
+services:
+  showcase:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      FPS: 5
+    volumes:
+      - ./data:/data   # put your clip here as clip.mp4; without it Eagle's demo clip is used
+      - ./out:/out     # results; delete this folder to re-run
