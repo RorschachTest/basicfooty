@@ -9,36 +9,149 @@
   video, img { width: 100%; background: #000; border-radius: 6px; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
   h3 { margin: 16px 0 4px; font-size: 1rem; }
-  button { font: inherit; padding: 6px 14px; }
-</style>
-<h1>Eagle vs Tactix, same clip</h1>
-<p>Compare each minimap against the source video. A missing video means that tool failed: open its log.
-  <button onclick="document.querySelectorAll('video').forEach(v => { v.currentTime = 0; v.play() })">Play all from start</button></p>
+  button { font: inherit; padding: 6px 14px; cursor: pointer; }
+  [data-tour] { scroll-margin-top: 24px; }
 
-<h2>Source clip</h2>
-<video src="clip.mp4" controls muted style="max-width: 700px"></video>
+  /* Guided tour */
+  #tour-spot { position: fixed; z-index: 10; border-radius: 8px; outline: 2px solid #8cf; outline-offset: 4px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, .72); pointer-events: none; }
+  #tour-card { position: fixed; z-index: 11; right: 16px; bottom: 16px; width: min(360px, calc(100vw - 32px)); box-sizing: border-box;
+    background: #1d2733; color: #eee; border: 1px solid #3a4a5c; border-radius: 10px; padding: 16px 18px; box-shadow: 0 8px 30px #000a; }
+  #tour-card h2 { margin: 0 0 6px; font-size: 1.1rem; }
+  #tour-card p { margin: 0 0 14px; font-size: .95rem; color: #cdd6df; }
+  #tour-card code { background: #0006; padding: 1px 5px; border-radius: 4px; font-size: .85rem; }
+  #tour-card .row { display: flex; gap: 8px; align-items: center; }
+  #tour-count { margin-right: auto; font-size: .85rem; color: #9aa8b6; }
+  #tour-next { background: #8cf; color: #111; border: 0; border-radius: 6px; font-weight: 600; }
+  #tour-back, #tour-skip { background: none; color: #cdd6df; border: 1px solid #3a4a5c; border-radius: 6px; }
+  [hidden] { display: none !important; }
+</style>
+
+<h1 data-tour="welcome">Eagle vs Tactix, same clip</h1>
+<p>Compare each minimap against the source video. A missing video means that tool failed: open its log.
+  <button id="play-all">Play all from start</button>
+  <button id="tour-start">Take the tour</button></p>
+
+<section data-tour="source">
+  <h2>Source clip</h2>
+  <video src="clip.mp4" controls muted style="max-width: 700px"></video>
+</section>
 
 <div class="cols">
   <section>
     <h2>Eagle</h2>
-    <h3>Detections on video</h3>
-    <video src="eagle/annotated.mp4" controls muted></video>
-    <h3>Minimap</h3>
-    <video src="eagle/minimap.mp4" controls muted></video>
-    <h3>Voronoi (drawn by this repo from Eagle's coordinates)</h3>
-    <video src="eagle/voronoi.mp4" controls muted></video>
-    <p>Data: <a href="eagle/processed_data.json">processed_data.json</a> ·
+    <div data-tour="eagle-video">
+      <h3>Detections on video</h3>
+      <video src="eagle/annotated.mp4" controls muted></video>
+    </div>
+    <div data-tour="eagle-minimap">
+      <h3>Minimap</h3>
+      <video src="eagle/minimap.mp4" controls muted></video>
+    </div>
+    <div data-tour="eagle-voronoi">
+      <h3>Voronoi (drawn by this repo from Eagle's coordinates)</h3>
+      <video src="eagle/voronoi.mp4" controls muted></video>
+    </div>
+    <p data-tour="eagle-data">Data: <a href="eagle/processed_data.json">processed_data.json</a> ·
       <a href="eagle/raw_data.json">raw_data.json</a> ·
       <a href="eagle/metadata.json">metadata.json</a> ·
       <a href="eagle/log.txt">log</a></p>
   </section>
   <section>
     <h2>Tactix</h2>
-    <h3>Video with minimap and Voronoi overlay</h3>
-    <video src="tactix/result.mp4" controls muted></video>
-    <p>Data: <a href="tactix/match_report.pdf">PDF report</a> ·
+    <div data-tour="tactix-video">
+      <h3>Video with minimap and Voronoi overlay</h3>
+      <video src="tactix/result.mp4" controls muted></video>
+    </div>
+    <p data-tour="tactix-data">Data: <a href="tactix/match_report.pdf">PDF report</a> ·
       <a href="tactix/stf/">Tracab files</a> ·
       <a href="tactix/log.txt">log</a></p>
   </section>
 </div>
+
+<div id="tour-spot" hidden></div>
+<div id="tour-card" role="dialog" aria-labelledby="tour-title" aria-describedby="tour-text" hidden>
+  <h2 id="tour-title"></h2>
+  <p id="tour-text"></p>
+  <div class="row">
+    <span id="tour-count"></span>
+    <button id="tour-skip">Skip</button>
+    <button id="tour-back">Back</button>
+    <button id="tour-next">Next</button>
+  </div>
+</div>
+
+<script>
+document.getElementById("play-all").onclick = () =>
+  document.querySelectorAll("video").forEach(v => { v.currentTime = 0; v.play(); });
+
+const STEPS = [
+  ["welcome", "Welcome",
+   "This page runs two football tracking tools, Eagle and Tactix, on the same clip, so you can see which one gives positions you can trust. The tour takes about a minute."],
+  ["source", "1. The source clip",
+   "The footage both tools were given: up to two minutes, sampled at 5 frames a second. Everything below should match what happens here. <b>Play all from start</b> restarts every video together."],
+  ["eagle-video", "2. What Eagle detected",
+   "Each ellipse is a detected player, coloured by team, with its tracking ID. Green is a goalkeeper. Black dots are the pitch landmarks Eagle used to map the camera view onto the pitch."],
+  ["eagle-minimap", "3. Eagle's minimap",
+   "The same players from above, on a 105 × 68 m pitch. The grey area is what the camera can see. Check that players sit where they are in the source clip."],
+  ["eagle-voronoi", "4. Space control",
+   "Each player owns the part of the pitch they are closest to, shaded by team. Only trust it inside the area the camera sees: players out of shot are missing."],
+  ["eagle-data", "5. Eagle's data",
+   "Per-frame coordinates as JSON, for building your own analysis. <code>metadata.json</code> holds the team for each player ID; fix it there if a player is on the wrong team."],
+  ["tactix-video", "6. Tactix",
+   "Tactix draws its overlays straight onto the video, with its minimap and Voronoi in the top-left corner. If its players bunch up on a line, its pitch calibration has failed for this footage."],
+  ["tactix-data", "7. Tactix's data",
+   "A PDF match report, and tracking files in Tracab format that the kloppy library can load. Each log shows why a tool failed if one of its videos is missing."],
+  ["welcome", "Try your own clip",
+   "Put a video at <code>data/clip.mp4</code>, delete the <code>out</code> folder, and run <code>docker compose up</code>. The page refreshes with the new results when both tools finish (about 45 minutes for two minutes of video on a laptop CPU). <b>Take the tour</b> replays this guide."],
+];
+
+const spot = document.getElementById("tour-spot"), card = document.getElementById("tour-card");
+const $ = id => document.getElementById(id);
+let step = -1;
+
+function place() {
+  if (step < 0) return;
+  const r = document.querySelector(`[data-tour="${STEPS[step][0]}"]`).getBoundingClientRect();
+  Object.assign(spot.style, { top: r.top + "px", left: r.left + "px", width: r.width + "px", height: r.height + "px" });
+}
+
+function show(i) {
+  step = i;
+  const [target, title, text] = STEPS[i];
+  $("tour-title").textContent = title;
+  $("tour-text").innerHTML = text;
+  $("tour-count").textContent = `${i + 1} of ${STEPS.length}`;
+  $("tour-back").hidden = i === 0;
+  $("tour-skip").hidden = i === STEPS.length - 1;
+  $("tour-next").textContent = i === 0 ? "Start" : i === STEPS.length - 1 ? "Done" : "Next";
+  spot.hidden = card.hidden = false;
+  document.querySelector(`[data-tour="${target}"]`).scrollIntoView({ block: "start" });
+  place();
+  $("tour-next").focus();
+}
+
+function end() {
+  step = -1;
+  spot.hidden = card.hidden = true;
+  try { localStorage.setItem("tourSeen", "1"); } catch {}
+}
+
+$("tour-next").onclick = () => step === STEPS.length - 1 ? end() : show(step + 1);
+$("tour-back").onclick = () => show(step - 1);
+$("tour-skip").onclick = end;
+$("tour-start").onclick = () => show(0);
+addEventListener("keydown", e => {
+  if (step < 0) return;
+  if (e.key === "Escape") end();
+  if (e.key === "ArrowRight") $("tour-next").click();
+  if (e.key === "ArrowLeft" && step > 0) show(step - 1);
+});
+addEventListener("scroll", place, { passive: true });
+addEventListener("resize", place);
+
+let seen = false;
+try { seen = localStorage.getItem("tourSeen") === "1"; } catch {}
+if (!seen) show(0);
+</script>
 </html>
